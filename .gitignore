@@ -1,0 +1,5 @@
+.zshrc
+settings.json
+credentials.json
+token.json
+.venv
