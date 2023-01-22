@@ -31,8 +31,9 @@ if not creds or not creds.valid:
 
 initialize_drive = build('drive', 'v2', credentials=creds)
 selected_folder_id = '13NzfUDyseTmw6Nj7XDeYTdkuEx73XUE3'
+youtube = build('youtube', 'v3', credentials=creds)
 
-def print_files_in_folder(service, folder_id):
+def get_files_in_folder(service, folder_id):
   """Print files belonging to a folder.
 
   Args:
@@ -55,8 +56,31 @@ def print_files_in_folder(service, folder_id):
 
 def doSomething(ids):
     # file = initialize_drive.files().get(fileId=ids[0]).execute()
-    file = initialize_drive.files().get(fileId=ids[0]).execute()
-    print(file['title'])
+    # Iterate through the files and upload the mp4 file to YouTube
+    if not ids:
+        print('No files found.')
+    for item in ids:
+        # print(item)
+        file_id = item['id']
+        file_name = item['name']
+        # Create a MediaFileUpload object for the mp4 file
+        media = MediaFileUpload(file_name, mimetype='video/mp4')
+        # Create a request to upload the mp4 file to YouTube
+        request = youtube.videos().insert(
+            part="snippet,status",
+            body={
+                "snippet": {
+                    "title": file_name,
+                    "description": "Uploaded from Google Drive"
+                },
+                "status": {
+                    "privacyStatus": "public"
+                }
+            },
+            media_body=media
+        )
+        response = request.execute()
+        print(F'File ID: {file_id} has been upload to YouTube with video ID: {response["id"]}')
 
 
-print_files_in_folder(service=initialize_drive, folder_id=selected_folder_id)
+get_files_in_folder(service=initialize_drive, folder_id=selected_folder_id)
