@@ -8,7 +8,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import json
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/drive']
+SCOPES = ['https://www.googleapis.com/auth/drive',
+          'https://www.googleapis.com/auth/youtube.upload']
 
 # Use the application default credentials
 creds = None
@@ -55,16 +56,17 @@ def get_files_in_folder(service, folder_id):
 
 
 def doSomething(ids):
-    # file = initialize_drive.files().get(fileId=ids[0]).execute()
     # Iterate through the files and upload the mp4 file to YouTube
     if not ids:
         print('No files found.')
     for item in ids:
-        # print(item)
-        file_id = item['id']
-        file_name = item['name']
+        file = initialize_drive.files().get(fileId=item).execute()
+        print(json.dumps(file, sort_keys=True, indent=4))
+        file_id = file['id']
+        file_name = file['title']
         # Create a MediaFileUpload object for the mp4 file
-        media = MediaFileUpload(file_name, mimetype='video/mp4')
+        media = MediaFileUpload(
+            '../../../Downloads/2023-01-13-215700325.mp4', mimetype=file['mimeType'], chunksize=-1, resumable=True)
         # Create a request to upload the mp4 file to YouTube
         request = youtube.videos().insert(
             part="snippet,status",
@@ -74,13 +76,14 @@ def doSomething(ids):
                     "description": "Uploaded from Google Drive"
                 },
                 "status": {
-                    "privacyStatus": "public"
+                    "privacyStatus": "private"
                 }
             },
             media_body=media
         )
         response = request.execute()
-        print(F'File ID: {file_id} has been upload to YouTube with video ID: {response["id"]}')
+        print(response)
+        # print(F'File ID: {file_id} has been upload to YouTube with video ID: {response["id"]}')
 
 
 get_files_in_folder(service=initialize_drive, folder_id=selected_folder_id)
